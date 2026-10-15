@@ -1,0 +1,24 @@
+{
+  "id": "scenario_8",
+  "name": "Fault Injection Recovery (ROUND_TO_CASEPACK)",
+  "description": "ERP rounds order from 50 to 60 due to supplier case-pack misbehaviour. Post-execution verifier detects MISMATCH; agent validates 60 is safe and adapts.",
+  "situation": {
+    "scenario_type": "fault_recovery",
+    "sku_id": "SKU-MILK-1L",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 50,
+    "supplier_id": "SUP-FRESH",
+    "event_details": {
+      "fault": "ROUND_TO_CASEPACK"
+    }
+  },
+  "expected": {
+    "outcomes": ["MODIFY"],
+    "min_qty": 55,
+    "max_qty": 65,
+    "required_tools": ["create_po", "validate_proposed_po"],
+    "must_not_call": [],
+    "requires_write": true
+  },
+  "fault": "ROUND_TO_CASEPACK"
+}

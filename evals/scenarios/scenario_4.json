@@ -1,0 +1,22 @@
+{
+  "id": "scenario_4",
+  "name": "Budget Nearly Exhausted -> ESCALATE",
+  "description": "Category budget has ₹2,000 remaining, but supplier MOQ requires ₹2,760. Validator blocks order; agent escalates.",
+  "situation": {
+    "scenario_type": "constraint",
+    "sku_id": "SKU-SHAMPOO",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 48,
+    "supplier_id": "SUP-MEGA",
+    "event_details": {}
+  },
+  "expected": {
+    "outcomes": ["ESCALATE"],
+    "min_qty": 0,
+    "max_qty": 0,
+    "required_tools": ["get_budget", "validate_proposed_po", "escalate"],
+    "must_not_call": ["create_po"],
+    "requires_write": false
+  },
+  "fault": null
+}

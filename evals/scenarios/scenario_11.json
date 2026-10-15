@@ -1,0 +1,24 @@
+{
+  "id": "scenario_11",
+  "name": "Demand Spike Anomaly (Stretch)",
+  "description": "Sales history reveals 2.5x spike in recent days (z-score > 3.0). Agent flags anomaly, adjusts forecast velocity, and places supplemental PO.",
+  "situation": {
+    "scenario_type": "anomaly",
+    "sku_id": "SKU-RICE-5KG",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 100,
+    "supplier_id": "SUP-MEGA",
+    "event_details": {
+      "anomaly_detected": true
+    }
+  },
+  "expected": {
+    "outcomes": ["MODIFY", "ACCEPT"],
+    "min_qty": 80,
+    "max_qty": 120,
+    "required_tools": ["get_demand_forecast", "get_recent_sales", "validate_proposed_po", "create_po"],
+    "must_not_call": ["escalate"],
+    "requires_write": true
+  },
+  "fault": null
+}

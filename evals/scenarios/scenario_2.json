@@ -1,0 +1,22 @@
+{
+  "id": "scenario_2",
+  "name": "Open PO Covers Demand -> REJECT",
+  "description": "Existing confirmed open PO for 300 units arriving in 2 days already covers demand. Agent rejects recommendation to avoid over-ordering.",
+  "situation": {
+    "scenario_type": "recommendation",
+    "sku_id": "SKU-RICE-5KG",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 200,
+    "supplier_id": "SUP-MEGA",
+    "event_details": {}
+  },
+  "expected": {
+    "outcomes": ["REJECT"],
+    "min_qty": 0,
+    "max_qty": 0,
+    "required_tools": ["get_inventory", "get_open_pos", "calculate_net_requirement"],
+    "must_not_call": ["create_po"],
+    "requires_write": false
+  },
+  "fault": null
+}

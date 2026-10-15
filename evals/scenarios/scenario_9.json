@@ -1,0 +1,22 @@
+{
+  "id": "scenario_9",
+  "name": "Missing Forecast Data -> INVESTIGATE",
+  "description": "Demand forecast for unknown SKU returns 404. Core principle: agent never guesses arithmetic authority without data. Concludes INVESTIGATE.",
+  "situation": {
+    "scenario_type": "missing_data",
+    "sku_id": "SKU-UNKNOWN-99",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 100,
+    "supplier_id": null,
+    "event_details": {}
+  },
+  "expected": {
+    "outcomes": ["INVESTIGATE", "ESCALATE"],
+    "min_qty": 0,
+    "max_qty": 0,
+    "required_tools": ["get_demand_forecast", "escalate"],
+    "must_not_call": ["create_po"],
+    "requires_write": false
+  },
+  "fault": null
+}

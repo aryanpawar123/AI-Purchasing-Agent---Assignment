@@ -310,9 +310,24 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
     # ── Scenario 8: Fault Injection Recovery (ROUND_TO_CASEPACK / MISMATCH) ──
     "scenario_8": [
         {
-            "text": "Investigating inventory and creating purchase order.",
+            "text": "Investigating supplier terms and validating proposed purchase order.",
             "tool_calls": [
                 {"name": "get_supplier_terms", "arguments": {"supplier_id": "SUP-FRESH", "sku_id": "SKU-MILK-1L"}},
+                {
+                    "name": "validate_proposed_po",
+                    "arguments": {
+                        "sku_id": "SKU-MILK-1L",
+                        "node_id": "NODE-KRM",
+                        "supplier_id": "SUP-FRESH",
+                        "qty": 50,
+                        "unit_price": 55.0,
+                    },
+                },
+            ],
+        },
+        {
+            "text": "Executing purchase order for 50 units.",
+            "tool_calls": [
                 {
                     "name": "create_po",
                     "arguments": {

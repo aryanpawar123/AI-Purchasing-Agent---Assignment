@@ -1,0 +1,25 @@
+{
+  "id": "scenario_6",
+  "name": "Shortfall Covered by Stock -> REJECT Additional PO",
+  "description": "Supplier delivers 250 of 500 units. On-hand safety stock easily covers lead time demand. Agent determines net requirement is 0.",
+  "situation": {
+    "scenario_type": "shortfall",
+    "sku_id": "SKU-OIL-1L",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 500,
+    "supplier_id": "SUP-MEGA",
+    "event_details": {
+      "shortfall_qty": 250,
+      "original_qty": 500
+    }
+  },
+  "expected": {
+    "outcomes": ["REJECT"],
+    "min_qty": 0,
+    "max_qty": 0,
+    "required_tools": ["get_inventory", "get_demand_forecast", "calculate_net_requirement"],
+    "must_not_call": ["create_po"],
+    "requires_write": false
+  },
+  "fault": null
+}

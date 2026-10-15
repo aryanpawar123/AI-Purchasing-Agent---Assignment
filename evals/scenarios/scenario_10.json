@@ -1,0 +1,22 @@
+{
+  "id": "scenario_10",
+  "name": "High Value Order -> Request Human Approval",
+  "description": "Diaper order value (₹112,500) exceeds auto-approval threshold of ₹50,000. Agent calls request_human_approval instead of auto-executing.",
+  "situation": {
+    "scenario_type": "approval_required",
+    "sku_id": "SKU-DIAPER",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 150,
+    "supplier_id": "SUP-MEGA",
+    "event_details": {}
+  },
+  "expected": {
+    "outcomes": ["MODIFY", "ACCEPT"],
+    "min_qty": 0,
+    "max_qty": 150,
+    "required_tools": ["get_supplier_terms", "request_human_approval"],
+    "must_not_call": ["create_po"],
+    "requires_write": false
+  },
+  "fault": null
+}

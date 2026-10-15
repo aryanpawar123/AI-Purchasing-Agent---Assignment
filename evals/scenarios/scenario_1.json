@@ -1,0 +1,22 @@
+{
+  "id": "scenario_1",
+  "name": "Happy Path ACCEPT",
+  "description": "System recommendation of 120 units matches net requirement with no constraints. Creates PO and verifies state.",
+  "situation": {
+    "scenario_type": "recommendation",
+    "sku_id": "SKU-MILK-1L",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 120,
+    "supplier_id": "SUP-FRESH",
+    "event_details": {}
+  },
+  "expected": {
+    "outcomes": ["ACCEPT"],
+    "min_qty": 120,
+    "max_qty": 120,
+    "required_tools": ["get_inventory", "get_demand_forecast", "get_supplier_terms", "calculate_net_requirement", "validate_proposed_po", "create_po"],
+    "must_not_call": ["escalate"],
+    "requires_write": true
+  },
+  "fault": null
+}

@@ -1,0 +1,24 @@
+{
+  "id": "scenario_7",
+  "name": "Shortfall, No Alternate -> ESCALATE",
+  "description": "Sole supplier for perishable Milk shortfalls. Zero alternate suppliers available. Stockout imminent within 24 hours. Agent escalates immediately.",
+  "situation": {
+    "scenario_type": "shortfall",
+    "sku_id": "SKU-MILK-1L",
+    "node_id": "NODE-IND",
+    "recommended_qty": 100,
+    "supplier_id": "SUP-FRESH",
+    "event_details": {
+      "shortfall_qty": 100
+    }
+  },
+  "expected": {
+    "outcomes": ["ESCALATE"],
+    "min_qty": 0,
+    "max_qty": 0,
+    "required_tools": ["get_alternate_suppliers", "escalate"],
+    "must_not_call": ["create_po"],
+    "requires_write": false
+  },
+  "fault": null
+}

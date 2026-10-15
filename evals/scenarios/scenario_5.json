@@ -1,0 +1,25 @@
+{
+  "id": "scenario_5",
+  "name": "Supplier Shortfall -> Split to Alternate",
+  "description": "Primary supplier confirms 100 of 200 units. Agent finds alternate supplier SUP-QUICK and issues split PO for 100 units.",
+  "situation": {
+    "scenario_type": "shortfall",
+    "sku_id": "SKU-RICE-5KG",
+    "node_id": "NODE-KRM",
+    "recommended_qty": 200,
+    "supplier_id": "SUP-MEGA",
+    "event_details": {
+      "shortfall_qty": 100,
+      "original_qty": 200
+    }
+  },
+  "expected": {
+    "outcomes": ["MODIFY"],
+    "min_qty": 80,
+    "max_qty": 120,
+    "required_tools": ["get_alternate_suppliers", "validate_proposed_po", "create_po"],
+    "must_not_call": [],
+    "requires_write": true
+  },
+  "fault": null
+}
