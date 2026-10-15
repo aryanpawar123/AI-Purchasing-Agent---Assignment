@@ -58,7 +58,7 @@ def seed():
         _seed_budgets(db)
         _seed_existing_pos(db)
         db.commit()
-        print("✓ Database seeded successfully.")
+        print("[OK] Database seeded successfully.")
     except Exception:
         db.rollback()
         raise
