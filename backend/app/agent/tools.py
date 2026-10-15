@@ -24,7 +24,7 @@ from app.policy.validator import (
 from app.policy.verifier import verify, POIntent, POActual
 
 # Base URL for the mock ERP — same process, just different router
-_ERP_BASE = "http://localhost:8000/erp"
+_ERP_BASE = "http://localhost:8000"
 
 
 def set_erp_base(url: str):

@@ -105,8 +105,8 @@ def calculate_net_requirement(
         safety_stock=round(safety_stock, 2),
         net_need_raw=round(net_need_raw, 2),
         net_need_rounded=net_need_rounded,
-        coverage_days_before=round(coverage_days_before, 2),
-        coverage_days_after=round(coverage_days_after, 2),
+        coverage_days_before=round(coverage_days_before, 2) if coverage_days_before != float('inf') else float('inf'),
+        coverage_days_after=round(coverage_days_after, 2) if coverage_days_after != float('inf') else float('inf'),
     )
 
 

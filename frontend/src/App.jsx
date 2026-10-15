@@ -21,8 +21,8 @@ const API_BASE = 'http://localhost:8000';
 const FALLBACK_SCENARIOS = [
   {
     id: 'scenario_1',
-    title: 'Scenario 1: Happy Path ACCEPT',
-    description: 'Recommended order for Milk (120 units) verified against forecast and lead time. Creates PO and verifies state.',
+    title: 'Scenario 1: System Recommendation -> ACCEPT',
+    description: 'Recommended order for Milk (120 units) verified against forecast and lead time. Passes pure-code Validator, creates PO, and verifies exact ERP state.',
     situation: {
       scenario_type: 'recommendation',
       sku_id: 'SKU-MILK-1L',
@@ -34,7 +34,7 @@ const FALLBACK_SCENARIOS = [
   {
     id: 'scenario_2',
     title: 'Scenario 2: Open PO Covers Demand -> REJECT',
-    description: 'Existing open PO for 300 units arriving in 2 days already covers demand. Agent rejects recommendation to avoid over-ordering.',
+    description: 'Existing open PO for 300 units arriving in 2 days already covers demand. Agent detects open order and rejects recommendation to prevent over-stocking.',
     situation: {
       scenario_type: 'recommendation',
       sku_id: 'SKU-RICE-5KG',
@@ -46,7 +46,7 @@ const FALLBACK_SCENARIOS = [
   {
     id: 'scenario_3',
     title: 'Scenario 3: Storage Constraint -> MODIFY',
-    description: 'Recommended 800 units exceeds storage and max coverage limits. Agent detects violation and adapts down to 100 safe units.',
+    description: 'Recommended 800 units exceeds warehouse storage capacity. Validator flags violation and agent adapts down to 100 safe units.',
     situation: {
       scenario_type: 'constraint',
       sku_id: 'SKU-RICE-5KG',
@@ -57,8 +57,8 @@ const FALLBACK_SCENARIOS = [
   },
   {
     id: 'scenario_4',
-    title: 'Scenario 4: Budget Nearly Exhausted -> ESCALATE',
-    description: 'Personal-care budget has ₹2,000 remaining, but supplier MOQ requires ₹2,760. Validator blocks order; agent escalates.',
+    title: 'Scenario 4: Budget Constraint -> ESCALATE',
+    description: 'Category budget has ₹2,000 remaining, but supplier MOQ requires ₹2,760. Pure-code Validator blocks order; agent escalates.',
     situation: {
       scenario_type: 'constraint',
       sku_id: 'SKU-SHAMPOO',
@@ -70,7 +70,7 @@ const FALLBACK_SCENARIOS = [
   {
     id: 'scenario_5',
     title: 'Scenario 5: Supplier Shortfall -> Split to Alternate',
-    description: 'Primary supplier delivers only 100 of 200 units. Agent finds alternate supplier SUP-QUICK and issues split PO for remainder.',
+    description: 'Primary supplier delivers only 100 of 200 units. Agent finds alternate supplier SUP-QUICK and issues a split PO for remainder.',
     situation: {
       scenario_type: 'shortfall',
       sku_id: 'SKU-RICE-5KG',
@@ -83,7 +83,7 @@ const FALLBACK_SCENARIOS = [
   {
     id: 'scenario_8',
     title: 'Scenario 8: Fault Recovery (Case-Pack Mismatch)',
-    description: 'ERP rounds order from 50 to 60 units due to supplier case-pack misbehaviour. Verifier detects MISMATCH; agent adapts safely.',
+    description: 'ERP rounds order from 50 to 60 units due to supplier case-pack misbehaviour. Post-execution Verifier detects MISMATCH; agent adapts safely.',
     situation: {
       scenario_type: 'fault_recovery',
       sku_id: 'SKU-MILK-1L',
@@ -95,8 +95,8 @@ const FALLBACK_SCENARIOS = [
   },
   {
     id: 'scenario_10',
-    title: 'Scenario 10: Value > ₹50,000 -> Request Human Approval',
-    description: 'High value diaper order (₹112,500) exceeds auto-approval threshold. Agent requests human approval instead of auto-executing.',
+    title: 'Scenario 10: High Value Order -> Request Human Approval',
+    description: 'High value diaper order (₹112,500) exceeds auto-approval threshold (> ₹50,000). Agent requests human approval instead of auto-executing.',
     situation: {
       scenario_type: 'approval_required',
       sku_id: 'SKU-DIAPER',
@@ -290,6 +290,44 @@ export default function App() {
         </div>
       </header>
 
+      {/* ── 4-Stage Operational Pipeline ─────────────────────────────── */}
+      <div className="workflow-bar">
+        <div className="workflow-step-item">
+          <span className="workflow-step-num">1</span>
+          <div className="workflow-step-text">
+            <span className="workflow-step-title">Tool Investigation</span>
+            <span className="workflow-step-desc">Inspect mock ERP inventory & forecast</span>
+          </div>
+        </div>
+        <ArrowRight size={14} className="workflow-arrow" />
+
+        <div className="workflow-step-item">
+          <span className="workflow-step-num">2</span>
+          <div className="workflow-step-text">
+            <span className="workflow-step-title">Deterministic Calculations</span>
+            <span className="workflow-step-desc">Lead-time demand, safety stock & net need</span>
+          </div>
+        </div>
+        <ArrowRight size={14} className="workflow-arrow" />
+
+        <div className="workflow-step-item">
+          <span className="workflow-step-num">3</span>
+          <div className="workflow-step-text">
+            <span className="workflow-step-title">Policy Validator Gate</span>
+            <span className="workflow-step-desc">Pure-code check: budget, storage & MOQ</span>
+          </div>
+        </div>
+        <ArrowRight size={14} className="workflow-arrow" />
+
+        <div className="workflow-step-item">
+          <span className="workflow-step-num">4</span>
+          <div className="workflow-step-text">
+            <span className="workflow-step-title">Post-Execution Verifier</span>
+            <span className="workflow-step-desc">Re-read ERP state & recover on mismatch</span>
+          </div>
+        </div>
+      </div>
+
       {/* ── Main Content Grid ──────────────────────────────────────────── */}
       <main className="main-content">
         {/* ── Left Column: Controls & Scenarios ────────────────────────── */}
@@ -298,7 +336,7 @@ export default function App() {
             <div className="card-header">
               <h2 className="card-title">
                 <Layers size={18} color="#3b82f6" />
-                Scenario Presets
+                Evaluation Scenario Picker
               </h2>
             </div>
 
@@ -353,7 +391,7 @@ export default function App() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Fulfillment Node</label>
+              <label className="form-label">Fulfillment Node (Dark Store)</label>
               <input
                 className="input"
                 value={situation.node_id || ''}
@@ -362,7 +400,7 @@ export default function App() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Recommended Quantity</label>
+              <label className="form-label">System Recommended Quantity</label>
               <input
                 className="input"
                 type="number"
@@ -402,7 +440,7 @@ export default function App() {
               </h2>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.6rem' }}>
-              Toggle misbehaviours to test post-execution verification and auto-recovery:
+              Configurable ERP misbehaviour to exercise agent verification & recovery:
             </p>
 
             <div className="fault-grid">
@@ -435,7 +473,7 @@ export default function App() {
             <div className="card-header">
               <h2 className="card-title">
                 <Database size={18} color="#8b5cf6" />
-                Audit Log History
+                Decision Audit Trail
               </h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -590,14 +628,14 @@ export default function App() {
             {loading && (
               <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
                 <Activity className="animate-spin" size={32} style={{ margin: '0 auto 1rem' }} />
-                <div>Agent evaluating inventory, demand curves & policy rules...</div>
+                <div>Agent investigating via tools, calculating net need & validating constraints...</div>
               </div>
             )}
 
             {!loading && traceSteps.length === 0 && (
               <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
-                Select a scenario and click <strong>"Run Autonomous Agent"</strong> to observe the
-                real-time reasoning, tool calls, and post-execution verification.
+                Select an evaluation scenario and click <strong>"Run Autonomous Agent"</strong> to observe the
+                ReAct tool loop, deterministic validation gating, and post-execution verification.
               </div>
             )}
 
@@ -649,13 +687,13 @@ export default function App() {
 
                       {isViolation && (
                         <div className="violation-alert">
-                          <strong>Pure-Code Validator Block:</strong> Proposed PO violated deterministic policy rules. Execution prevented.
+                          <strong>Deterministic Policy Violation (Pre-Execution Gate):</strong> Proposed PO violated business rules. Write prevented.
                         </div>
                       )}
 
                       {isMismatch && (
                         <div className="mismatch-alert">
-                          <strong>Verifier Deviation Alert:</strong> ERP actual state deviated from agent intent (Fault detected).
+                          <strong>Post-Execution Verifier Mismatch (Fault Detected):</strong> Actual ERP state deviated from agent intent (Auto-recovery active).
                         </div>
                       )}
                     </div>

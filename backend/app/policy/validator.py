@@ -30,6 +30,13 @@ class Violation:
     requested: Optional[float]  # what was requested
     message: str            # human-readable explanation
 
+    def __post_init__(self):
+        import math
+        if self.limit is not None and math.isinf(self.limit):
+            self.limit = 9999.0
+        if self.requested is not None and math.isinf(self.requested):
+            self.requested = 9999.0
+
 
 @dataclass
 class ProposedPO:
