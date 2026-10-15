@@ -7,14 +7,23 @@ tests can override it to use an in-memory database.
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.pool import StaticPool
 
 from app.config import settings
 
 
+# For in-memory SQLite, we must use StaticPool so all sessions share
+# the same underlying connection (otherwise each gets a separate DB).
+_connect_args = {"check_same_thread": False}
+_extra: dict = {}
+if settings.db_path == ":memory:":
+    _extra["poolclass"] = StaticPool
+
 engine = create_engine(
     f"sqlite:///{settings.db_path}",
-    connect_args={"check_same_thread": False},  # needed for FastAPI + SQLite
+    connect_args=_connect_args,
     echo=False,
+    **_extra,
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
