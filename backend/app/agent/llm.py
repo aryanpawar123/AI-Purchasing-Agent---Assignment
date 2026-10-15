@@ -81,9 +81,10 @@ class MockLLMProvider(BaseLLMProvider):
     def chat(self, messages: list[LLMMessage], tools: list[dict]) -> LLMResponse:
         # If no script, check if user message mentions a scenario ID
         if self._scenario_script is None:
+            from app.agent.mock_scripts import SCENARIO_SCRIPTS
             for m in messages:
                 if m.role == "user":
-                    for sc_id in ["scenario_1", "scenario_2", "scenario_3", "scenario_4", "scenario_5", "scenario_8", "scenario_9", "scenario_10"]:
+                    for sc_id in SCENARIO_SCRIPTS:
                         if sc_id in m.content:
                             self.load_scenario(sc_id)
                             break

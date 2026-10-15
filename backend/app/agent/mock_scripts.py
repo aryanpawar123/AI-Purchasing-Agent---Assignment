@@ -254,7 +254,7 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
     # ── Scenario 5: Supplier Shortfall -> Split to Alternate ──────────────
     "scenario_5": [
         {
-            "text": "Primary supplier SUP-MEGA confirmed only 250 of 500 units for Rice. Finding alternate suppliers for the remainder.",
+            "text": "Primary supplier SUP-MEGA confirmed only 100 of 200 units for Rice. Finding alternate suppliers for the remainder.",
             "tool_calls": [
                 {"name": "get_alternate_suppliers", "arguments": {"sku_id": "SKU-RICE-5KG", "exclude_supplier_id": "SUP-MEGA"}},
                 {"name": "get_inventory", "arguments": {"sku_id": "SKU-RICE-5KG", "node_id": "NODE-KRM"}},
@@ -262,7 +262,7 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
             ],
         },
         {
-            "text": "Alternate supplier SUP-QUICK carries Rice at ₹460, MOQ 20, lead time 1 day. Validating split PO for 250 units.",
+            "text": "Alternate supplier SUP-QUICK carries Rice at ₹460, MOQ 20, lead time 1 day. Validating split PO for 100 units.",
             "tool_calls": [
                 {
                     "name": "validate_proposed_po",
@@ -270,7 +270,7 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
                         "sku_id": "SKU-RICE-5KG",
                         "node_id": "NODE-KRM",
                         "supplier_id": "SUP-QUICK",
-                        "qty": 250,
+                        "qty": 100,
                         "unit_price": 460.0,
                     },
                 }
@@ -285,7 +285,7 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
                         "sku_id": "SKU-RICE-5KG",
                         "node_id": "NODE-KRM",
                         "supplier_id": "SUP-QUICK",
-                        "qty": 250,
+                        "qty": 100,
                         "unit_price": 460.0,
                     },
                 }
@@ -294,11 +294,11 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
         {
             "text": json.dumps({
                 "outcome": "MODIFY",
-                "final_qty": 250,
+                "final_qty": 100,
                 "supplier_id": "SUP-QUICK",
                 "po_id": 2,
-                "rationale": "Primary supplier fulfilled 250 of 500 units. Split remainder of 250 units to alternate supplier SUP-QUICK to prevent stockout.",
-                "factors": ["Primary shortfall of 250 units", "SUP-QUICK alternate available", "Split PO executed"],
+                "rationale": "Primary supplier fulfilled 100 of 200 units. Split remainder of 100 units to alternate supplier SUP-QUICK to prevent stockout.",
+                "factors": ["Primary shortfall of 100 units", "SUP-QUICK alternate available", "Split PO executed"],
                 "constraints_checked": ["budget", "storage", "moq", "lead_time_stockout"],
                 "validation_status": "passed",
                 "verification_status": "verified",
@@ -319,7 +319,7 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
                         "sku_id": "SKU-MILK-1L",
                         "node_id": "NODE-KRM",
                         "supplier_id": "SUP-FRESH",
-                        "qty": 48,
+                        "qty": 50,
                         "unit_price": 55.0,
                     },
                 },
@@ -346,7 +346,7 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
                 "final_qty": 60,
                 "supplier_id": "SUP-FRESH",
                 "po_id": 2,
-                "rationale": "ERP rounded order from 48 to 60 units due to supplier case-pack constraint. Agent detected MISMATCH in verifier, confirmed 60 units is safe and passes all policy rules.",
+                "rationale": "ERP rounded order from 50 to 60 units due to supplier case-pack constraint. Agent detected MISMATCH in verifier, confirmed 60 units is safe and passes all policy rules.",
                 "factors": ["Fault injection detected in post-execution verifier", "Re-validated actual PO state", "Mismatch safely absorbed"],
                 "constraints_checked": ["case_pack", "storage", "budget"],
                 "validation_status": "passed",
@@ -392,6 +392,82 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
         },
     ],
 
+    # ── Scenario 6: Supplier Shortfall Covered by Existing Stock ─────────
+    "scenario_6": [
+        {
+            "text": "Supplier confirmed 250 of 500 units. Checking if existing stock and incoming 250 cover demand during lead time.",
+            "tool_calls": [
+                {"name": "get_inventory", "arguments": {"sku_id": "SKU-OIL-1L", "node_id": "NODE-KRM"}},
+                {"name": "get_demand_forecast", "arguments": {"sku_id": "SKU-OIL-1L", "node_id": "NODE-KRM"}},
+                {
+                    "name": "calculate_net_requirement",
+                    "arguments": {
+                        "on_hand": 150,
+                        "reserved": 20,
+                        "open_po_qty": 250,
+                        "daily_forecast": 20,
+                        "daily_std": 5,
+                        "lead_time_days": 3,
+                        "case_pack": 6,
+                        "moq": 6,
+                    },
+                },
+            ],
+        },
+        {
+            "text": json.dumps({
+                "outcome": "REJECT",
+                "final_qty": 0,
+                "supplier_id": "SUP-MEGA",
+                "po_id": None,
+                "rationale": "Supplier fulfilled 250 units. Combined with on-hand stock (130 available), total 380 units provides 19 days of coverage (lead time need is only 80 units). No additional PO required; monitoring stock.",
+                "factors": ["Shortfall absorbed by safety stock", "Net requirement is 0", "Coverage is 19 days"],
+                "constraints_checked": ["lead_time_stockout", "over_order"],
+                "validation_status": "passed",
+                "verification_status": "not_run",
+                "confidence": 0.95,
+            }),
+        },
+    ],
+
+    # ── Scenario 7: Shortfall, No Alternate, Imminent Stockout -> ESCALATE ─
+    "scenario_7": [
+        {
+            "text": "Primary supplier SUP-FRESH shortfalled on Milk (perishable). Checking for alternate suppliers and stockout risk.",
+            "tool_calls": [
+                {"name": "get_alternate_suppliers", "arguments": {"sku_id": "SKU-MILK-1L", "exclude_supplier_id": "SUP-FRESH"}},
+                {"name": "get_inventory", "arguments": {"sku_id": "SKU-MILK-1L", "node_id": "NODE-IND"}},
+                {"name": "get_demand_forecast", "arguments": {"sku_id": "SKU-MILK-1L", "node_id": "NODE-IND"}},
+            ],
+        },
+        {
+            "text": "No alternate suppliers exist for Milk. Stock covers less than 1.5 days. Imminent stockout detected. Escalating immediately.",
+            "tool_calls": [
+                {
+                    "name": "escalate",
+                    "arguments": {
+                        "reason": "Sole supplier SUP-FRESH shortfalled on SKU-MILK-1L at NODE-IND. Zero alternate suppliers available. Imminent stockout within 24 hours.",
+                        "attempted_actions": ["get_alternate_suppliers", "get_inventory"],
+                    },
+                }
+            ],
+        },
+        {
+            "text": json.dumps({
+                "outcome": "ESCALATE",
+                "final_qty": 0,
+                "supplier_id": "SUP-FRESH",
+                "po_id": None,
+                "rationale": "Single-supplier SKU shortfall with zero alternate suppliers and imminent stockout (<24h coverage). Escalated to supply chain operations for emergency procurement.",
+                "factors": ["Zero alternate suppliers", "Imminent stockout risk", "Single point of failure"],
+                "constraints_checked": ["supplier_availability", "stockout_risk"],
+                "validation_status": "not_run",
+                "verification_status": "not_run",
+                "confidence": 0.96,
+            }),
+        },
+    ],
+
     # ── Scenario 10: High Value -> Request Human Approval ─────────────────
     "scenario_10": [
         {
@@ -428,6 +504,61 @@ SCENARIO_SCRIPTS: dict[str, list[dict]] = {
                 "validation_status": "passed",
                 "verification_status": "not_run",
                 "confidence": 0.95,
+            }),
+        },
+    ],
+
+    # ── Scenario 11 (Stretch): Demand Spike Anomaly ───────────────────────
+    "scenario_11": [
+        {
+            "text": "Investigating recent sales history and forecast for Basmati Rice to detect demand anomalies.",
+            "tool_calls": [
+                {"name": "get_demand_forecast", "arguments": {"sku_id": "SKU-RICE-5KG", "node_id": "NODE-KRM"}},
+                {"name": "get_recent_sales", "arguments": {"sku_id": "SKU-RICE-5KG", "node_id": "NODE-KRM", "days": 30}},
+            ],
+        },
+        {
+            "text": "Sales in last 3 days average ~62 units/day (2.5x the baseline forecast of 25 units/day, z-score > 3.0). Validating PO with adjusted velocity.",
+            "tool_calls": [
+                {
+                    "name": "validate_proposed_po",
+                    "arguments": {
+                        "sku_id": "SKU-RICE-5KG",
+                        "node_id": "NODE-KRM",
+                        "supplier_id": "SUP-MEGA",
+                        "qty": 100,
+                        "unit_price": 420.0,
+                    },
+                }
+            ],
+        },
+        {
+            "text": "Validation passed for demand-spike PO. Executing purchase order.",
+            "tool_calls": [
+                {
+                    "name": "create_po",
+                    "arguments": {
+                        "sku_id": "SKU-RICE-5KG",
+                        "node_id": "NODE-KRM",
+                        "supplier_id": "SUP-MEGA",
+                        "qty": 100,
+                        "unit_price": 420.0,
+                    },
+                }
+            ],
+        },
+        {
+            "text": json.dumps({
+                "outcome": "MODIFY",
+                "final_qty": 100,
+                "supplier_id": "SUP-MEGA",
+                "po_id": 2,
+                "rationale": "Demand spike detected: recent 3-day sales velocity is 2.5x baseline forecast (z > 3.0). Placed supplemental PO for 100 units to prevent stockout.",
+                "factors": ["Demand anomaly detected (z > 3.0)", "Velocity 2.5x baseline", "Supplemental PO created"],
+                "constraints_checked": ["budget", "storage", "approval_threshold"],
+                "validation_status": "passed",
+                "verification_status": "verified",
+                "confidence": 0.93,
             }),
         },
     ],
